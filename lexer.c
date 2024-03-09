@@ -60,3 +60,16 @@ void lex() {
     // helps see what token is processed and value associated with it.
     printf("Next token is: %d, Next lexeme is %s\n", nextToken, lexeme);
 }
+void getChar() {
+    if ((nextChar = getc(in_fp)) != EOF) {
+        if (isalpha(nextChar)) {
+            charClass = LETTER;
+        } else if (isdigit(nextChar)) {
+            charClass = DIGIT;
+        } else {
+            charClass = UNKNOWN;
+        }
+    } else {
+        charClass = EOF_TYPE;
+    }
+}
