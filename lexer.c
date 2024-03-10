@@ -73,3 +73,12 @@ void getChar() {
         charClass = EOF_TYPE;
     }
 }
+void addChar() {
+    int len = strlen(lexeme);
+    if (len + 1 < MAX_LEXEME_LENGTH) {
+        lexeme[len] = nextChar;
+        lexeme[len + 1] = 0;  // Null-terminate string
+    } else {
+        printf("Error - lexeme is too long \n");
+    }
+}
