@@ -5,11 +5,12 @@
 
 #include "lexer.h"
 
+//character classes
 #define LETTER 0
 #define DIGIT 1
 #define UNKNOWN 99
 
-// Define token codes
+//token codes
 #define INT_LIT 10
 #define IDENT 11
 #define PLUS_OP 21
@@ -20,17 +21,18 @@
 #define RIGHT_PAREN 26
 #define END_OF_FILE -1
 
-// Define the maximum length of a lexeme
+//maximum length of a lexeme
 #define MAX_LEXEME_LENGTH 100
 
-extern FILE *in_fp;  
-extern char lexeme[MAX_LEXEME_LENGTH];  
+//global variables
+extern FILE *in_fp;  //intput file pointer
+extern char lexeme[MAX_LEXEME_LENGTH];  //lexeme buffer
 extern int nextToken;  
 extern char nextChar;  
 extern int charClass;  
 extern int currentToken;
 
-
+//function prototypes
 void getChar();
 void addChar();
 void getNonBlank();
@@ -38,14 +40,15 @@ void lex();
 void lookup(char ch);
 
 
+//fetches the next token from the input stream and updates global token state
 int getNextToken(void) {
     lex(); 
     return nextToken;
 }
 
-
+//main lexer function that processes input characters and classifies them into tokens
 void lex() {
-    getNonBlank();
+    getNonBlank(); //skips the whitespace
 
     switch (charClass) {
         case LETTER:
@@ -76,7 +79,7 @@ void lex() {
 
     printf("Next token is: %d, Next lexeme is %s\n", nextToken, lexeme);
 }
-
+//reads the next char from the input file and updates its class
 void getChar() {
     if ((nextChar = getc(in_fp)) != EOF) {
         if (isalpha(nextChar)) charClass = LETTER;
@@ -84,7 +87,7 @@ void getChar() {
         else charClass = UNKNOWN;
     } else charClass = EOF;
 }
-
+//adds the curr char to the lexeme buffer
 void addChar() {
     int len = strlen(lexeme);
     if (len + 1 < MAX_LEXEME_LENGTH) {
@@ -94,7 +97,7 @@ void addChar() {
         printf("Error - lexeme is too long\n");
     }
 }
-
+//determines the token of single char operators and ()
 void lookup(char ch) {
     switch (ch) {
         case '+': addChar(); nextToken = PLUS_OP; break;
@@ -106,19 +109,20 @@ void lookup(char ch) {
         default: addChar(); nextToken = EOF; 
     }
 }
-
+//skips whitespace chars by repeating reading until non whitespace char
 void getNonBlank() {
     while (isspace(nextChar)) getChar();
 }
-
+//init the lexer with the given input file
 void initLexer(char *filename) {
     in_fp = fopen(filename, "r");
     if (in_fp == NULL) {
         fprintf(stderr, "Error opening file: %s\n", filename);
         exit(EXIT_FAILURE);
     }
-    getChar();
+    getChar(); //prime the pump by reading the first char
 }
+//closes the lexer by releasing the input file resource
 void closeLexer() {
     if (in_fp != NULL) {
         fclose(in_fp);
