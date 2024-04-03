@@ -1,84 +1,127 @@
-#include "parser.c"
-#include "main.c"
-#include "utils.c"
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "lexer.h"
+
+#define LETTER 0
+#define DIGIT 1
+#define UNKNOWN 99
+
+// Define token codes
+#define INT_LIT 10
+#define IDENT 11
+#define PLUS_OP 21
+#define MINUS_OP 22
+#define MULT_OP 23
+#define DIV_OP 24
+#define LEFT_PAREN 25
+#define RIGHT_PAREN 26
+#define END_OF_FILE -1
+
+// Define the maximum length of a lexeme
+#define MAX_LEXEME_LENGTH 100
+
+extern FILE *in_fp;  
+extern char lexeme[MAX_LEXEME_LENGTH];  
+extern int nextToken;  
+extern char nextChar;  
+extern int charClass;  
+extern int currentToken;
+
+
+void getChar();
+void addChar();
+void getNonBlank();
+void lex();
+void lookup(char ch);
+
+
+int getNextToken(void) {
+    lex(); 
+    return nextToken;
+}
+
 
 void lex() {
-    // ignore any spaces or tabs that might be before the next token.
     getNonBlank();
 
-    // checks what kind of character encountered
-    // determines how process the characters to form token
     switch (charClass) {
-        // If letter, could be identifier or a keyword.
         case LETTER:
-            // clear out any old data from lexeme to start fresh.
             memset(lexeme, 0, sizeof(lexeme));
-
-            // keep adding letters or digits to form a complete identifier.
             do {
                 addChar();
                 getChar();
             } while (charClass == LETTER || charClass == DIGIT);
-
-            // mark this token as an identifier.
             nextToken = IDENT;
             break;
-
-        // If digit, then numeric literal.
         case DIGIT:
-            // clearing lexeme to start capturing the number.
             memset(lexeme, 0, sizeof(lexeme));
-
-            // keep adding digits to get the whole number.
             do {
                 addChar();
                 getChar();
             } while (charClass == DIGIT);
-
-            // token as an integer literal after completion.
             nextToken = INT_LIT;
             break;
-
-        // For characters that aren't letters or digits, mark unknown.
         case UNKNOWN:
-            // lookup function helps id the character and assign the right token
             lookup(nextChar);
-            getChar(); //Moving on to the next character
+            getChar();
             break;
-
-        // If hit end of the file, then done scanning.
         case EOF:
-            // mark the token as END_OF_FILE to signal that scanning is complete.
             nextToken = END_OF_FILE;
-
-            // lexeme to "EOF" to visually represent the end of file in output.
             strcpy(lexeme, "EOF");
             break;
     }
 
-    // After iding the token and capturing the lexeme, print
-    // helps see what token is processed and value associated with it.
     printf("Next token is: %d, Next lexeme is %s\n", nextToken, lexeme);
 }
+
 void getChar() {
     if ((nextChar = getc(in_fp)) != EOF) {
-        if (isalpha(nextChar)) {
-            charClass = LETTER;
-        } else if (isdigit(nextChar)) {
-            charClass = DIGIT;
-        } else {
-            charClass = UNKNOWN;
-        }
-    } else {
-        charClass = EOF_TYPE;
-    }
+        if (isalpha(nextChar)) charClass = LETTER;
+        else if (isdigit(nextChar)) charClass = DIGIT;
+        else charClass = UNKNOWN;
+    } else charClass = EOF;
 }
+
 void addChar() {
     int len = strlen(lexeme);
     if (len + 1 < MAX_LEXEME_LENGTH) {
         lexeme[len] = nextChar;
-        lexeme[len + 1] = 0;  // Null-terminate string
+        lexeme[len + 1] = '\0';
     } else {
-        printf("Error - lexeme is too long \n");
+        printf("Error - lexeme is too long\n");
+    }
+}
+
+void lookup(char ch) {
+    switch (ch) {
+        case '+': addChar(); nextToken = PLUS_OP; break;
+        case '-': addChar(); nextToken = MINUS_OP; break;
+        case '*': addChar(); nextToken = MULT_OP; break;
+        case '/': addChar(); nextToken = DIV_OP; break;
+        case '(': addChar(); nextToken = LEFT_PAREN; break;
+        case ')': addChar(); nextToken = RIGHT_PAREN; break;
+        default: addChar(); nextToken = EOF; 
+    }
+}
+
+void getNonBlank() {
+    while (isspace(nextChar)) getChar();
+}
+
+void initLexer(char *filename) {
+    in_fp = fopen(filename, "r");
+    if (in_fp == NULL) {
+        fprintf(stderr, "Error opening file: %s\n", filename);
+        exit(EXIT_FAILURE);
+    }
+    getChar();
+}
+void closeLexer() {
+    if (in_fp != NULL) {
+        fclose(in_fp);
+        in_fp = NULL;
     }
 }
