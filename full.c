@@ -4,10 +4,12 @@
 #include <string.h>
 #include <stdbool.h> 
 
+// Token definitions for lexical analysis
 #define LETTER 0
 #define DIGIT 1
 #define UNKNOWN 99
 
+// Token definitions for recognized elements
 #define INT_LIT 10
 #define IDENT 11
 #define PLUS_OP 21
@@ -20,9 +22,11 @@
 #define LEFT_BRACE 27
 #define RIGHT_BRACE 28
 
+// Preprocessor tokens
 #define PREPROCESSOR 30 
 #define MAX_LEXEME_LENGTH 100
 
+// Global vars
 char lexeme[MAX_LEXEME_LENGTH];
 int nextToken;
 FILE *in_fp = NULL;
@@ -45,7 +49,7 @@ void factor(void);
 void match(int expectedToken);
 void error(void);
 
-// Lexer functions
+// Inits the lexer with the input file
 void initLexer(char *filename) {
     in_fp = fopen(filename, "r");
     if (in_fp == NULL) {
@@ -56,11 +60,13 @@ void initLexer(char *filename) {
     getNextToken();
 }
 
+// Retrieves the next token from the input stream
 int getNextToken(void) {
     lex();
     return nextToken;
 }
 
+// Closes the lexer by closing the input file
 void closeLexer(void) {
     if (in_fp != NULL) {
         fclose(in_fp);
@@ -68,6 +74,7 @@ void closeLexer(void) {
     }
 }
 
+// Reads the next character from the input file and determines its class
 void getChar() {
     nextChar = getc(in_fp);
     if (nextChar == EOF) {
@@ -81,7 +88,7 @@ void getChar() {
     }
 }
 
-
+// Adds the current character to the lexeme buffer
 void addChar() {
     int len = strlen(lexeme);
     if (len + 1 < MAX_LEXEME_LENGTH) {
@@ -92,6 +99,7 @@ void addChar() {
     }
 }
 
+// Token is based on the character and adds it to the lexeme
 void lookup(char ch) {
     switch (ch) {
         case '+': addChar(); nextToken = PLUS_OP; break;
@@ -106,11 +114,12 @@ void lookup(char ch) {
     }
 }
 
-
+// Skips whitespace characters in the input
 void getNonBlank() {
     while (isspace(nextChar)) getChar();
 }
 
+// Main lex function. Analyzes characters and updates lexeme and token.
 void lex() {
     lexeme[0] = '\0';
     getNonBlank();
@@ -141,7 +150,7 @@ void lex() {
     printf("Next token is: %d, Next lexeme is %s\n", nextToken, lexeme);
 }
 
-// Parser functions
+// Matches the current token with the expected token and goes to the next token
 void match(int expectedToken) {
     if (nextToken != expectedToken) {
         error();
@@ -157,17 +166,18 @@ void match(int expectedToken) {
     getNextToken();
 }
 
-
+// Error message and exits the program if an unexpected token 
 void error(void) {
     fprintf(stderr, "Error: Unexpected token.\n");
     exit(EXIT_FAILURE);
 }
 
+// Analyzes and prints the structure of a factor in an expression
 void factor(void) {
     if (nextToken == IDENT || nextToken == INT_LIT) {
         printf("[factor\n");
         match(nextToken);
-        printf("[id [%s]]\n", lexeme); // Use lexeme for the identifier or integer literal
+        printf("[id [%s]]\n", lexeme); 
         printf("]\n");
     } else if (nextToken == LEFT_PAREN) {
         printf("[factor\n");
@@ -181,30 +191,33 @@ void factor(void) {
     }
 }
 
+// Analyzes and prints the structure of a term in an expression
 void term(void) {
     printf("[term\n");
     factor();
     while (nextToken == MULT_OP || nextToken == DIV_OP) {
         printf("[");
-        match(nextToken); // This should also print the operator, but match does not currently do so
+        match(nextToken); 
         printf("]\n");
         factor();
     }
     printf("]\n");
 }
 
+// Analyzes and prints the structure of an expression
 void expression() {
     printf("[expr\n");
     term();
     while (nextToken == PLUS_OP || nextToken == MINUS_OP) {
         printf("[");
-        match(nextToken); // As with term, this needs to print the operator
+        match(nextToken); 
         printf("]\n");
         term();
     }
     printf("]\n");
 }
 
+// Main function to initiate lexical analysis on a given file
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         printf("Usage: %s <source_file>\n", argv[0]);
