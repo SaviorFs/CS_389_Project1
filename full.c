@@ -4,7 +4,10 @@
 #include <string.h>
 #include <stdbool.h> 
 
-// Token definitions for lexical analysis
+// Definitions for tokens corresponding to elements in a simplified C-like language syntax
+// The lexical analyzer is designed to recognize basic arithmetic operations, variable names, and numeric values
+// parentheses for grouping, and braces for block structuring, following a simplified BNF grammar.
+
 #define LETTER 0
 #define DIGIT 1
 #define UNKNOWN 99
